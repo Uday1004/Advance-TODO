@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../Firesebase/Firebase";
 import { ref, set, get, push, remove } from "firebase/database";
+import CheckIcon from '@rsuite/icons/Check';
+import CloseIcon from '@rsuite/icons/Close';
+import { CheckOutline } from "@rsuite/icons";
 
 function DailyTasks() {
   const [dailyTask, setDailyTask] = useState("");
@@ -8,6 +11,7 @@ function DailyTasks() {
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingTask, setEditingTask] = useState("");
   const [popupTask, setPopupTask] = useState(null);
+  const [checkedTasks, setCheckedTasks] = useState({});
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -16,7 +20,9 @@ function DailyTasks() {
         const snapshot = await get(dailyTasksRef);
         if (snapshot.exists()) {
           const data = snapshot.val();
-          setDailyTasks(Object.entries(data).map(([id, task]) => ({ id, ...task })));
+          setDailyTasks(
+            Object.entries(data).map(([id, task]) => ({ id, ...task }))
+          );
         } else {
           console.log("No daily tasks available");
         }
@@ -47,7 +53,7 @@ function DailyTasks() {
     const taskRef = ref(db, `dailyTasks/${id}`);
     remove(taskRef)
       .then(() => {
-        setDailyTasks(dailyTasks.filter(task => task.id !== id));
+        setDailyTasks(dailyTasks.filter((task) => task.id !== id));
         console.log("Task deleted successfully");
       })
       .catch((error) => {
@@ -65,7 +71,11 @@ function DailyTasks() {
       const taskRef = ref(db, `dailyTasks/${id}`);
       set(taskRef, { task: editingTask })
         .then(() => {
-          setDailyTasks(dailyTasks.map(task => (task.id === id ? { id, task: editingTask } : task)));
+          setDailyTasks(
+            dailyTasks.map((task) =>
+              task.id === id ? { id, task: editingTask } : task
+            )
+          );
           setEditingIndex(null);
           setEditingTask("");
           console.log("Task edited successfully");
@@ -77,62 +87,152 @@ function DailyTasks() {
   };
 
   const handleCheckTask = (id) => {
-    // Implement task check logic here (e.g., mark as completed)
+    setCheckedTasks((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
   };
-
   return (
-    <div className="container p-5 col mx-4 d-flex flex-column" style={{ border: "1px solid black", width: "auto", height: "30rem", position: "relative" }}>
+    <div
+      className="container  col mx-auto d-flex flex-column"
+      style={{
+        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+        borderRadius: "0.25rem",
+        width: "23rem",
+        maxWidth: "25rem",
+        height: "70vh",
+        position: "relative",
+        marginTop: "-10rem", // Adjust marginTop to space from the top
+        marginBottom: "1rem",
+      }}
+    >
       <h5 className="mb-4">My Daily Tasks</h5>
-      <div className="task-list flex-grow-1" style={{ height: "100%", overflowY: "auto", marginBottom: "1rem", WebkitOverflowScrolling: "touch" }}>
+      <div
+        className="task-list px-1 flex-grow-1"
+        style={{
+          height: "calc(100% - 4rem)",
+          overflowY: "auto",
+          marginBottom: "1rem",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
         <ul className="list-group" style={{ padding: "0", margin: "0" }}>
           {dailyTasks.map(({ id, task }) => (
-            <li key={id} className="list-group-item d-flex justify-content-between align-items-center" style={{ padding: "0.5rem", border: "1px solid #ddd", borderRadius: "0.25rem", width: "18rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              <button className="btn btn-outline-success btn-sm mr-2" onClick={() => handleCheckTask(id)}>
-                ✓
-              </button>
-              {editingIndex === id ? (
-                <input
-                  type="text"
-                  value={editingTask}
-                  onChange={(e) => setEditingTask(e.target.value)}
-                  onBlur={() => handleBlur(id)}
-                  autoFocus
-                  className="form-control mr-2"
-                  style={{ flex: "1" }}
-                />
-              ) : (
-                <span
-                  className="task-text"
-                  style={{ flex: "1", cursor: "pointer", margin: "0px 7px" }}
-                  onClick={() => setPopupTask(task)}
+            <li
+              key={id}
+              className="list-group-item d-flex flex-column justify-content-between align-items-start"
+              style={{
+                padding: "0.5rem",
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                borderRadius: "0.25rem",
+                marginBottom: "0.5rem",
+                width: "100%",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              <div className="d-flex align-items-center w-100">
+                <button
+                  className={`btn btn-sm mr-2 ${checkedTasks[id] ? 'btn-outline-danger' : 'btn-outline-success'}`}
+                  onClick={() => handleCheckTask(id)}
                 >
-                  {task}
-                </span>
-              )}
+                   {checkedTasks[id] ? <CloseIcon/>:<CheckOutline/>}
+                </button>
+                {editingIndex === id ? (
+                  <input
+                    type="text"
+                    value={editingTask}
+                    onChange={(e) => setEditingTask(e.target.value)}
+                    onBlur={() => handleBlur(id)}
+                    autoFocus
+                    className="form-control mr-2"
+                    style={{ flex: "1" }}
+                  />
+                ) : (
+                  <span
+                    className="task-text"
+                    style={{
+                      flex: "1",
+                      cursor: "pointer",
+                      margin: "0px 7px",
+                    }}
+                    onClick={() => setPopupTask(task)}
+                  >
+                    <p
+                      style={{
+                        textDecoration: checkedTasks[id]
+                          ? "line-through"
+                          : "none",
+                        color: checkedTasks[id] ? "#a1a1a1" : "inherit",
+                        fontWeight:'bold'
+                      }}
+                    >
+                      {task}
+                    </p>
+                  </span>
+                )}
+              </div>
               {editingIndex !== id && (
-                <>
-                  <button className="btn btn-outline-secondary btn-sm mr-2" onClick={() => handleEditTask(id, task)}>
+                <div className="mt-2 d-flex justify-content-between w-100">
+                  <button
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={() => handleEditTask(id, task)}
+                  >
                     Edit
                   </button>
-                  <button className="btn btn-outline-danger btn-sm" onClick={() => handleDeleteTask(id)}>
+                  <button
+                    className="btn btn-outline-danger btn-sm"
+                    onClick={() => handleDeleteTask(id)}
+                  >
                     Delete
                   </button>
-                </>
+                </div>
               )}
             </li>
           ))}
         </ul>
       </div>
-      <div className="form-group d-flex align-items-center" style={{ position: "absolute", bottom: "10px", width: "18.5rem" }}>
-        <input type="text" name="text" value={dailyTask} onChange={(e) => setDailyTask(e.target.value)} placeholder="Write your daily task" className="form-control" style={{ flex: "1" }} />
-        <button className="btn btn-outline-primary" onClick={handleAddDailyTask} style={{ marginLeft: "10px" }}>
+      <footer
+        className="form-group d-flex align-items-center mb-2 mt-2"
+        style={{ position: "relative", width: "100%" }}
+      >
+        <input
+          type="text"
+          name="text"
+          value={dailyTask}
+          onChange={(e) => setDailyTask(e.target.value)}
+          placeholder="Write your daily task"
+          className="form-control"
+          style={{ flex: "1" }}
+        />
+        <button
+          className="btn btn-outline-primary"
+          onClick={handleAddDailyTask}
+          style={{ marginLeft: "10px" }}
+        >
           <i className="fa fa-plus"></i>
         </button>
-      </div>
+      </footer>
       {popupTask && (
-        <div className="popup" style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", backgroundColor: "white", padding: "1rem", border: "1px solid #ddd", borderRadius: "0.25rem" }}>
+        <div
+          className="popup"
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "white",
+            padding: "1rem",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+            borderRadius: "0.25rem",
+          }}
+        >
           <p>{popupTask}</p>
-          <button className="btn btn-outline-secondary" onClick={() => setPopupTask(null)}>
+          <button
+            className="btn btn-outline-secondary"
+            onClick={() => setPopupTask(null)}
+          >
             Close
           </button>
         </div>

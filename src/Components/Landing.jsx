@@ -5,8 +5,8 @@ import DailyTasks from "./Tasks/Dailytask";
 function Landing() {
   return (
     <div className="container d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
-      <div className="text-center row">
-        <DailyTasks />
+      <div className="text-center mt-0">
+        <DailyTasks  />
         {/* <TodayTasks /> */}
       </div>
     </div>
