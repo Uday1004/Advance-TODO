@@ -34,7 +34,7 @@ const Navigation = () => {
         onClose={() => setOpen(false)}
       >
         <Drawer.Header>
-          <Drawer.Title>Drawer Title</Drawer.Title>
+          <Drawer.Title>Diary-logo</Drawer.Title>
           <Drawer.Actions>
             <Button onClick={() => setOpen(false)}>Cancel</Button>
             <Button onClick={() => alert("hello ")} appearance="primary">
