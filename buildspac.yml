@@ -1,0 +1,29 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 14  # Use the appropriate Node.js version
+    commands:
+      - echo Installing dependencies...
+      - npm install
+
+  pre_build:
+    commands:
+      - echo Running pre-build tasks...
+
+  build:
+    commands:
+      - echo Building the React app...
+      - npm run build  # This command builds your React app
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      # Optional: Add commands to deploy your build artifacts or other post-build actions
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: 'build'  # The directory where the build artifacts are located
+  discard-paths: yes
