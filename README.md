@@ -1,70 +1,84 @@
-# Getting Started with Create React App
+# AWS DevTools Project Documentation
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+[Image resource](./Screenshot%202024-07-29%20110336.png)
 
-## Available Scripts
+## Introduction
 
-In the project directory, you can run:
+This project demonstrates how to use AWS DevTools to create a pipeline, build, and deploy an application on an EC2 instance. Below is a step-by-step guide on setting up the project using various AWS services.
 
-### `npm start`
+Before stating anything just checkout the video : how to create EC2 on aws and launch the instace with ubuntu or any other OS with static IP address 
+- here is the Link ([AWS EC2](https://www.youtube.com/watch?v=-FKQwXtrSSQ&pp=ygUIYXdzIGVjMiA%3D))
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Steps
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 1. Create an IAM User
 
-### `npm test`
+Before starting with AWS DevTools, create an IAM user with the necessary permissions. This user will be used to manage resources and access various AWS services.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Go to the [IAM Console](https://console.aws.amazon.com/iam/home).
+- Create a new user with `Programmatic access` and attach policies for CodeCommit, CodeBuild, S3, and EC2.
 
-### `npm run build`
+### 2. Set Up AWS CodeCommit
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Create a repository in AWS CodeCommit to host your source code.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- Navigate to the [CodeCommit Console](https://console.aws.amazon.com/codecommit/home).
+- Create a new repository and note down the repository URL.
+- Add this repository as a remote in your local Git setup:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+    ```bash
+    git remote add origin <CodeCommit repository URL>
+    ```
 
-### `npm run eject`
+### 3. Add and Push Code to CodeCommit
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Commit your local code changes and push them to the CodeCommit repository.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- Stage and commit your code:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+    ```bash
+    git add .
+    git commit -m "Initial commit"
+    ```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- Push the code to the CodeCommit repository:
 
-## Learn More
+    ```bash
+    git push -u origin master
+    ```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### 4. Create a CodeBuild Project
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Create a CodeBuild project to automate the build process.
 
-### Code Splitting
+- Go to the [CodeBuild Console](https://console.aws.amazon.com/codebuild/home).
+- Create a new build project and specify the source as your CodeCommit repository.
+- Create a service role with permissions for CodeBuild and attach it to the project.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### 5. Configure `buildspec.yml`
 
-### Analyzing the Bundle Size
+Create a `buildspec.yml` file in the root of your project. This file configures the build commands and settings.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Example `buildspec.yml`:
 
-### Making a Progressive Web App
+```yaml
+version: 0.2
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+phases:
+  install:
+    runtime-versions:
+      python: 3.8
+  build:
+    commands:
+      - echo "Building the application..."
+      - python setup.py install
 
-### Advanced Configuration
+artifacts:
+  files:
+    - '**/*'
+  discard-paths: yes
+  ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Here is the full resources or above all steps: [Youtube video link] (https://www.youtube.com/watch?v=p5i3cMCQ760)
 
-### Deployment
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
