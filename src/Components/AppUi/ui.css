@@ -1,4 +1,37 @@
-.navbar .navbar-collapse {
-    display: flex !important;
-  }
-  
+/* Default light theme styles */
+body.light {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+header.header.light {
+  background-color: #f8f9fa;
+}
+
+.menu-btn.btn-light {
+  background-color: #ffffff;
+  border: 1px solid #000000;
+}
+
+.menu-btn.btn-light .fa-bars {
+  color: #000000;
+}
+
+/* Dark theme styles */
+body.dark {
+  background-color: #333333;
+  color: #ffffff;
+}
+
+header.header.dark {
+  background-color: #444444;
+}
+
+.menu-btn.btn-dark {
+  background-color: #333333;
+  border: 1px solid #ffffff;
+}
+
+.menu-btn.btn-dark .fa-bars {
+  color: #ffffff;
+}

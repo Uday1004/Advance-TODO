@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../Firesebase/Firebase";
-import { ref, set, get, push, remove } from "firebase/database";
-import CheckIcon from '@rsuite/icons/Check';
-import CloseIcon from '@rsuite/icons/Close';
-import { CheckOutline } from "@rsuite/icons";
+import { ref, set, get, push, remove, onValue } from "firebase/database";
+import { CheckOutline, CloseOutline,Trash,Edit  } from "@rsuite/icons";
 
 function DailyTasks() {
   const [dailyTask, setDailyTask] = useState("");
@@ -14,32 +12,39 @@ function DailyTasks() {
   const [checkedTasks, setCheckedTasks] = useState({});
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const dailyTasksRef = ref(db, "dailyTasks");
-        const snapshot = await get(dailyTasksRef);
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          setDailyTasks(
-            Object.entries(data).map(([id, task]) => ({ id, ...task }))
-          );
-        } else {
-          console.log("No daily tasks available");
-        }
-      } catch (error) {
-        console.error("Error fetching daily tasks", error);
-      }
-    };
+    const dailyTasksRef = ref(db, "dailyTasks");
 
-    fetchTasks();
+    // Listen for real-time updates
+    const unsubscribe = onValue(dailyTasksRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        setDailyTasks(
+          Object.entries(data).map(([id, task]) => ({ id, ...task }))
+        );
+        // Initialize checkedTasks state
+        const initialCheckedState = Object.fromEntries(
+          Object.entries(data).map(([id, task]) => [id, task.checked || false])
+        );
+        setCheckedTasks(initialCheckedState);
+      } else {
+        console.log("No daily tasks available");
+      }
+    });
+
+    // Cleanup the listener on component unmount
+    return () => unsubscribe();
   }, []);
 
   const handleAddDailyTask = () => {
+    if (dailyTask.trim() === "") {
+      alert("Task cannot be empty");
+      return;
+    }
+  
     const dailyTasksRef = ref(db, "dailyTasks");
     const newTaskRef = push(dailyTasksRef);
-    set(newTaskRef, { task: dailyTask })
+    set(newTaskRef, { task: dailyTask, checked: false })
       .then(() => {
-        setDailyTasks([...dailyTasks, { id: newTaskRef.key, task: dailyTask }]);
         setDailyTask("");
         console.log("Daily task added successfully");
         alert("Task added to your Daily Tasks");
@@ -47,14 +52,14 @@ function DailyTasks() {
       .catch((error) => {
         console.error("Error adding daily task", error);
       });
-  };
+  }
 
   const handleDeleteTask = (id) => {
     const taskRef = ref(db, `dailyTasks/${id}`);
     remove(taskRef)
       .then(() => {
-        setDailyTasks(dailyTasks.filter((task) => task.id !== id));
         console.log("Task deleted successfully");
+        alert('task deleted successfully')
       })
       .catch((error) => {
         console.error("Error deleting task", error);
@@ -69,13 +74,8 @@ function DailyTasks() {
   const handleBlur = (id) => {
     if (editingIndex !== null) {
       const taskRef = ref(db, `dailyTasks/${id}`);
-      set(taskRef, { task: editingTask })
+      set(taskRef, { task: editingTask, checked: checkedTasks[id] })
         .then(() => {
-          setDailyTasks(
-            dailyTasks.map((task) =>
-              task.id === id ? { id, task: editingTask } : task
-            )
-          );
           setEditingIndex(null);
           setEditingTask("");
           console.log("Task edited successfully");
@@ -87,14 +87,25 @@ function DailyTasks() {
   };
 
   const handleCheckTask = (id) => {
+    const newCheckedState = !checkedTasks[id];
     setCheckedTasks((prev) => ({
       ...prev,
-      [id]: !prev[id],
+      [id]: newCheckedState,
     }));
+    
+    const taskRef = ref(db, `dailyTasks/${id}`);
+    set(taskRef, { task: dailyTasks.find((task) => task.id === id).task, checked: newCheckedState })
+      .then(() => {
+        console.log("Task checked state updated successfully");
+      })
+      .catch((error) => {
+        console.error("Error updating task checked state", error);
+      });
   };
+
   return (
     <div
-      className="container  col mx-auto d-flex flex-column"
+      className="container col mx-auto d-flex flex-column"
       style={{
         boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
         borderRadius: "0.25rem",
@@ -102,7 +113,7 @@ function DailyTasks() {
         maxWidth: "25rem",
         height: "70vh",
         position: "relative",
-        marginTop: "-10rem", // Adjust marginTop to space from the top
+        marginTop: "-10rem",
         marginBottom: "1rem",
       }}
     >
@@ -117,7 +128,7 @@ function DailyTasks() {
         }}
       >
         <ul className="list-group" style={{ padding: "0", margin: "0" }}>
-          {dailyTasks.map(({ id, task }) => (
+          {dailyTasks.map(({ id, task, checked }) => (
             <li
               key={id}
               className="list-group-item d-flex flex-column justify-content-between align-items-start"
@@ -134,10 +145,10 @@ function DailyTasks() {
             >
               <div className="d-flex align-items-center w-100">
                 <button
-                  className={`btn btn-sm mr-2 ${checkedTasks[id] ? 'btn-outline-danger' : 'btn-outline-success'}`}
+                  className={`btn btn-sm mr-2 ${checked ? 'btn-outline-danger' : 'btn-outline-success'}`}
                   onClick={() => handleCheckTask(id)}
                 >
-                   {checkedTasks[id] ? <CloseIcon/>:<CheckOutline/>}
+                   {checked ? <CloseOutline /> : <CheckOutline />}
                 </button>
                 {editingIndex === id ? (
                   <input
@@ -161,11 +172,9 @@ function DailyTasks() {
                   >
                     <p
                       style={{
-                        textDecoration: checkedTasks[id]
-                          ? "line-through"
-                          : "none",
-                        color: checkedTasks[id] ? "#a1a1a1" : "inherit",
-                        fontWeight:'bold'
+                        textDecoration: checked ? "line-through" : "none",
+                        color: checked ? "#a1a1a1" : "inherit",
+                        fontWeight: 'bold',
                       }}
                     >
                       {task}
@@ -179,13 +188,13 @@ function DailyTasks() {
                     className="btn btn-outline-secondary btn-sm"
                     onClick={() => handleEditTask(id, task)}
                   >
-                    Edit
+                    <Edit/>
                   </button>
                   <button
                     className="btn btn-outline-danger btn-sm"
                     onClick={() => handleDeleteTask(id)}
                   >
-                    Delete
+                    <Trash/>
                   </button>
                 </div>
               )}
@@ -205,6 +214,7 @@ function DailyTasks() {
           placeholder="Write your daily task"
           className="form-control"
           style={{ flex: "1" }}
+          required
         />
         <button
           className="btn btn-outline-primary"

@@ -58,27 +58,30 @@ Create a CodeBuild project to automate the build process.
 ### 5. Configure `buildspec.yml`
 
 Create a `buildspec.yml` file in the root of your project. This file configures the build commands and settings.
+just check my buildspec.yml file in the root dir.
 
-Example `buildspec.yml`:
+### 6. Set Up AWS CodeDeploy
 
-```yaml
-version: 0.2
+Configure AWS CodeDeploy to manage the deployment of your application.
 
-phases:
-  install:
-    runtime-versions:
-      python: 3.8
-  build:
-    commands:
-      - echo "Building the application..."
-      - python setup.py install
+- Go to the [CodeDeploy Console](https://console.aws.amazon.com/codedeploy/home).
+- Create a new deployment application. Choose the deployment type based on your needs (e.g., EC2/On-Premises).
+- Configure the deployment group within the application. Specify the EC2 instances (or tags) where the application should be deployed.
 
-artifacts:
-  files:
-    - '**/*'
-  discard-paths: yes
-  ```
+### 7. Install and Configure the CodeDeploy Agent
 
-Here is the full resources or above all steps: [Youtube video link] (https://www.youtube.com/watch?v=p5i3cMCQ760)
+Install the CodeDeploy agent on your EC2 instance to enable it to receive deployments from CodeDeploy.
+
+- Connect to your EC2 instance using SSH.
+- Follow the instructions provided in the [CodeDeploy Agent Installation Guide](https://docs.aws.amazon.com/codedeploy/latest/userguide/codedeploy-agent-configuration.html)
+for install codeagent check my file [codedeploy_agent](./codeagent.txt)
+
+For more information, visit the [AWS CodeDeploy Console](https://console.aws.amazon.com/codedeploy/home).
+
+
+ 
+
+Here is the full resources or above all steps: [Youtube video link](https://www.youtube.com/watch?v=p5i3cMCQ760)
+codepipline and EC2 deploy in this video & codeagent install: [link](https://www.youtube.com/watch?v=IUF-pfbYGvg&t=650s)
 
 
