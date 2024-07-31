@@ -1,5 +1,5 @@
 # AWS DevTools Project Documentation
-
+ {{ template "hourly-table" $todayWeather.HourlyWeathers }} 
 [Image resource](./Screenshot%202024-07-29%20110336.png)
 
 ## Introduction
